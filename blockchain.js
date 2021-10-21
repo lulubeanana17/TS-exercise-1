@@ -3,12 +3,16 @@ exports.__esModule = true;
 var CryptoJS = require("crypto-js");
 // import crypto for hash
 var Block = /** @class */ (function () {
-    function Block(index, hash, previousHash, data, timeStamp) {
+    function Block(index, hash, previousHash, previousData, data, timeStamp, futureHash, futureData, blockKey) {
         this.index = index;
         this.hash = hash;
         this.previousHash = previousHash;
+        this.previousData = previousData;
         this.data = data;
         this.timeStamp = timeStamp;
+        this.futureHash = futureHash;
+        this.futureData = futureData;
+        this.blockKey = blockKey;
     }
     Block.GenerateHash = function (index, previousHash, data, timeStamp) {
         return CryptoJS.SHA256(index + previousHash + data + timeStamp).toString();
@@ -16,7 +20,8 @@ var Block = /** @class */ (function () {
     return Block;
 }());
 // create genesis block
-var genesisBlock = new Block(0, '010100110101', '', 'genesis', 1111);
+// genesis block is untouchable
+var genesisBlock = new Block(0, '010100110101', '', '', 'genesis', 1111, '', '', '1');
 // store blocks in array
 var storageBlock = [genesisBlock];
 // 0. get previous block
@@ -33,14 +38,22 @@ var createBlock = function (data) {
     var newTimeStampVariable = newTimeStamp();
     // 4. create hash
     var newHash = Block.GenerateHash(newIndex, data, newPreviousHash, newTimeStampVariable);
+    // 5. find previous data
+    var newPreviousData = getPreviousBlockVariable.data;
+    // generate block key
+    var crypto = require("crypto");
+    var newKey = crypto.randomBytes(20).toString("hex");
     // create new Block
-    var newBlock = new Block(newIndex, newHash, newPreviousHash, data, newTimeStampVariable);
+    var newBlock = new Block(newIndex, newHash, newPreviousHash, newPreviousData, data, newTimeStampVariable, '', '', newKey);
     // push to storageBlock
+    getPreviousBlockVariable.futureHash = newBlock.hash;
+    getPreviousBlockVariable.futureData = newBlock.data;
     storageBlock.push(newBlock);
     return newBlock;
 };
-createBlock("second");
-createBlock("third");
-createBlock("fourth");
-createBlock("fifth");
+createBlock('second');
+createBlock('third');
+createBlock('fourth');
+createBlock('fifth');
+createBlock('sixth');
 console.log(storageBlock);
